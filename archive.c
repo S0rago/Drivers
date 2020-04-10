@@ -11,17 +11,16 @@ void list(char *path, int archivedes);
 int fsize(const char *path);
 void writefile(const char *path, int archive);
 void readfile(const char *path);
+void showhelp();
 
 int main(int argc, char *argv[])
 {
-	if (argc < 2)
+	
+	if (argc != 3 || strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "--help") == 0)
 	{
-		printf("too few args\n");
-		printf("%lu", sizeof(-3));
-		exit(-1);
+		showhelp();
 	}
-	printf("%s: %s\n", argv[1], argv[2]);
-	if (strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--compress") == 0)
+	else if (strcmp(argv[1], "-c") == 0 || strcmp(argv[1], "--compress") == 0)
 	{
 		int archive = open(argv[3], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
 		writefile(argv[2], archive);
@@ -31,7 +30,7 @@ int main(int argc, char *argv[])
 	{
 		readfile(argv[2]);
 	}
-	printf("DONE");
+	else showhelp();
 	exit(0);
 }
 
@@ -83,7 +82,7 @@ void writefile(const char *path, int archive)
 	
 	write(archive, &len, sizeof(len));
 	write(archive, path, len);
-	printf(" size: %d\n", flen, sizeof(flen));
+	printf(" size: %d\n", flen);
 	if (flen > 0)
 	{
 		write(archive, &flen, sizeof(flen));
@@ -99,7 +98,7 @@ void readfile(const char *path)
 {
 	int archive = open(path, O_RDONLY);
 	int byteread = 1;
-	long pathsize = 0;
+	int pathsize = 0;
 	int fsize = 0;
 	int fdes = 0;
 	char filepath[PATH_MAX + 1];
@@ -108,17 +107,17 @@ void readfile(const char *path)
 	{
 		printf("Extracting: ");
 		byteread = read(archive, &pathsize, sizeof(pathsize));
-		printf(" %d (%ld)", pathsize, sizeof(pathsize));
+		printf(" %d", pathsize);
 		
 		read(archive, filepath, pathsize);
 		
 		read(archive, &fsize, sizeof(fsize));
-		printf(" %d (%ld)\n", fsize, sizeof(fsize));
+		printf(" %d\n", fsize);
 		
 		if (fsize == 0)
 		{
 			printf(" %s\n", filepath);
-		    mkdir(path, S_IRWXU | S_IRWXG);
+			mkdir(path, S_IRWXU | S_IRWXG);
 		}
 		else
 		{
@@ -133,4 +132,12 @@ void readfile(const char *path)
 			close(fdes);
 		}
 	}
+}
+
+void showhelp()
+{
+	printf("Usage: ./arc [OPTION] [FILE]\n");
+	printf("-c, --compress\t to compress selected folder\n");
+	printf("-e, --extract\t  to selected archive\n");
+	printf("-h, --help\t     to show this help\n");
 }
